@@ -1,0 +1,10 @@
+gunicorn
+uvicorn
+blacknoise
+boto3
+gTTS
+fastapi
+openai
+pydantic
+requests
+python-dotenv
