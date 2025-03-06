@@ -1,0 +1,29 @@
+name: Update Pinecone Data
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # ⏰ 매일 00:00 UTC (한국 시간 09:00)에 실행
+  workflow_dispatch:  # 🚀 수동 실행도 가능
+
+jobs:
+  update-pinecone:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12' 
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt 
+
+      - name: Run update script
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
+        run: python upload_to_pinecone.py
