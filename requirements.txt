@@ -1,0 +1,8 @@
+pandas
+numpy
+pinecone-client
+sqlalchemy
+pymysql
+langchain
+openai
+python-dotenv
