@@ -1,6 +1,6 @@
 pandas
 numpy
-pinecone-client
+pinecone
 sqlalchemy
 pymysql
 langchain
