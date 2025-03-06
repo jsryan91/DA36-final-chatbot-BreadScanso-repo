@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import chatbot
+from bread_chatbot.app.routers import chatbot
 import uvicorn
 
 # FastAPI 앱 생성
