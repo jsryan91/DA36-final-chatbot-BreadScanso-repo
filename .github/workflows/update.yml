@@ -2,7 +2,7 @@ name: Update Pinecone Data
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # ⏰ 매일 00:00 UTC (한국 시간 09:00)에 실행
+    - cron: '0 18 * * *'  # ⏰ 한국 시간 03:00에 실행
   workflow_dispatch:  # 🚀 수동 실행도 가능
 
 jobs:
@@ -15,10 +15,19 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12' 
+          python-version: '3.12'
+          
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt 
 
       - name: Run update script
