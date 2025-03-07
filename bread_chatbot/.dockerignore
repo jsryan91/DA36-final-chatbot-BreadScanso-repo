@@ -1,6 +1,5 @@
 # Git
 .git
-.gitignore
 
 # 환경 변수
 .env
