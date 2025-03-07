@@ -1,16 +1,11 @@
 from fastapi import FastAPI
-<<<<<<< HEAD:bread_chatbot/main.py
-from app.routers import chatbot
+from bread_chatbot.app.routers import chatbot
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
 # 환경변수 로드
 load_dotenv()
-=======
-from bread_chatbot.app.routers import chatbot
-import uvicorn
->>>>>>> 38189585a3a38424c578bc22d7d4562a15bcb184:main.py
 
 # FastAPI 앱 생성
 app = FastAPI()
