@@ -2,7 +2,7 @@ name: Update Pinecone Data
 
 on:
   schedule:
-    - cron: '0 18 * * *'  # ⏰ 한국 시간 03:00에 실행
+    - cron: '0 11 * * *'  # ⏰ 한국 시간 20:00에 실행
   workflow_dispatch:  # 🚀 수동 실행도 가능
 
 jobs:
