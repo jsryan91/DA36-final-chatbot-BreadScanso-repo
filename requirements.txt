@@ -1,13 +1,19 @@
 pandas~=2.2.3
 numpy~=2.2.3
-pinecone~=6.0.1
 sqlalchemy~=2.0.38
 pymysql
-langchain
-openai
 python-dotenv~=1.0.1
 
-pydantic~=2.10.6
 requests~=2.32.3
 dotenv~=0.9.9
+uvicorn==0.27.0
+gunicorn==21.2.0
+
+openai
+pydantic~=2.10.6
+fastapi==0.109.0
+langchain
+langchain-anthropic==0.1.1
 langchain-community~=0.3.19
+
+pinecone~=6.0.1
