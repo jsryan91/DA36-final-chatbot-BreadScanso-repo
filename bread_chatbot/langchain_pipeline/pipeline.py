@@ -38,10 +38,7 @@ class LangChainPipeline:
         """
 
         messages = [HumanMessage(content=prompt)]
-        # claude 응답
         response = self.model_claude.invoke(messages)
-        # openai 응답
-        # response = self.model_openai.invoke(messages)
         return response.content
 
    # 🐕🐕🐕🐕🐕
