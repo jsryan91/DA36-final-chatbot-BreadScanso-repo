@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from bread_chatbot.langchain_pipeline.pipeline.llm_logic import ask_chatbot
+from bread_chatbot.langchain_pipeline.pipeline import ask_chatbot
 from pydantic import BaseModel
 
 
@@ -22,12 +22,3 @@ async def query_chatbot_endpoint(request: QuestionRequest):
     except Exception as e:
         print(f"채팅 처리 중 오류 발생: {str(e)}")
         return {"error": f"처리 중 오류가 발생했습니다: {str(e)}"}
-
-# 실행
-# if __name__ == "__main__":
-#     while True:
-#         user_question = input("질문을 입력하세요: ")
-#         if user_question.lower() == 'exit':
-#             break
-#         llm_response = ask_chatbot(user_question)
-#         print("🤷🏻‍♀️: ", llm_response)

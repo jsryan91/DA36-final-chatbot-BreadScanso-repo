@@ -1,7 +1,3 @@
-import os
-from dotenv import load_dotenv
-from sqlalchemy import create_engine, text
-from bread_chatbot.langchain_pipeline.table_schema import TABLE_SCHEMA
 from bread_chatbot.langchain_pipeline.llm_utils import call_api, response_nlp
 from bread_chatbot.langchain_pipeline.query_engine import extract_sql_from_response, generate_query, run_query
 
