@@ -5,16 +5,16 @@ import os
 import time
 from sqlalchemy import create_engine
 from langchain_community.embeddings import OpenAIEmbeddings
+from dotenv import load_dotenv
 
-# 환경 변수 로드
-openai_api_key = os.environ.get("OPENAI_API_KEY")
-pinecone_api_key = os.environ.get("PINECONE_API_KEY")
-pinecone_index_name = os.environ.get("PINECONE_INDEX_NAME")
+load_dotenv()
 
-# Pinecone 최신 SDK 방식으로 초기화
+openai_api_key = os.getenv("OPENAI_API_KEY")
+pinecone_api_key = os.getenv("PINECONE_API_KEY")
+pinecone_index_name = os.getenv("PINECONE_INDEX_NAME")
+
 pc = pinecone.Pinecone(api_key=pinecone_api_key)
 
-# Pinecone 인덱스 확인 및 생성
 dimension = 1536
 try:
     indexes = pc.list_indexes().names()
@@ -33,19 +33,16 @@ except Exception as e:
     raise
 
 try:
-    # 최신 Pinecone SDK 방식으로 인덱스 접근
     index = pc.Index(pinecone_index_name)
     embedding_model = OpenAIEmbeddings(api_key=openai_api_key, model="text-embedding-3-small")
 except Exception as e:
     print(f"❌ Pinecone 인덱스 연결 또는 임베딩 모델 초기화 오류: {e}")
     raise
 
-# MySQL 연결
 engine = create_engine('mysql+pymysql://teamuser:StM!chel1905@3.34.46.30/dev_db')
 
 
-def fetch_data_with_retry(query, engine, retries=3, delay=5):
-    """SQL 실행 오류 발생 시 재시도"""
+def fetch_data_with_retry(query, engine, retries=2, delay=5)
     for attempt in range(retries):
         try:
             df = pd.read_sql(query, engine)
@@ -74,7 +71,7 @@ def upload_to_pinecone(df, namespace, batch_size=100):
 
     try:
         # 데이터를 문자열로 변환하고 행별로 결합
-        text_data = df.astype(str).apply(lambda row: ", ".join(row), axis=1).tolist()
+        text_data = df.astype(str).apply(lambda row: "| ".join(row), axis=1).tolist()
 
         # 배치 크기로 나누어 처리
         for i in range(0, len(text_data), batch_size):
@@ -121,61 +118,68 @@ def upload_to_pinecone(df, namespace, batch_size=100):
 
 if __name__ == "__main__":
     queries = {
-        "sales": """
-                SELECT 
-                    o.store, i.item_id, i.item_name, DATE(o.order_at) AS order_date, 
-                    SUM(oi.item_count) AS total_sold, 
-                    SUM(oi.item_count * i.sale_price) AS total_amount
-                FROM kiosk_orderitem oi
-                JOIN kiosk_orderinfo o ON oi.order_id = o.order_id
-                JOIN menu_item i ON oi.item_id = i.item_id
-                GROUP BY o.store, i.item_id, i.item_name, order_date
-                ORDER BY o.store, order_date DESC, total_sold DESC;
-            """,
         "members": """
                 WITH FavoriteProducts AS (
-                    SELECT 
-                        m.member_id, m.name AS member_name, i.item_name, COUNT(*) AS product_count,
+                    SELECT
+                        m.member_id,
+                        m.name AS member_name,
+                        i.item_name,
+                        COUNT(*) AS product_count,
                         RANK() OVER (PARTITION BY m.member_id ORDER BY COUNT(*) DESC) AS product_rank
                     FROM kiosk_orderinfo o
                     JOIN kiosk_paymentinfo p ON o.order_id = p.order_id
                     JOIN member_member m ON p.member_id = m.member_id
                     JOIN kiosk_orderitem oi ON o.order_id = oi.order_id
                     JOIN menu_item i ON oi.item_id = i.item_id
-                    GROUP BY m.member_id, i.item_name
+                    GROUP BY m.member_id, m.name, i.item_name
                 )
-                SELECT 
-                    m.member_id, m.name AS member_name, COUNT(DISTINCT o.order_id) AS total_orders,
-                    SUM(o.final_amount) AS total_spent,
-                    GROUP_CONCAT(DISTINCT fp.item_name ORDER BY fp.product_rank SEPARATOR ', ') AS favorite_products
+                SELECT
+                    m.member_id,
+                    m.name AS member_name,
+                    m.visit_count,
+                    m.total_spent,
+                    GROUP_CONCAT(fp.item_name ORDER BY fp.product_rank SEPARATOR ', ') AS favorite_products
                 FROM member_member m
-                LEFT JOIN kiosk_paymentinfo p ON m.member_id = p.member_id
-                LEFT JOIN kiosk_orderinfo o ON p.order_id = o.order_id
                 LEFT JOIN FavoriteProducts fp ON m.member_id = fp.member_id AND fp.product_rank <= 3
-                GROUP BY m.member_id, m.name
-                ORDER BY total_spent DESC;
+                GROUP BY m.member_id, m.name, m.visit_count, m.total_spent
+                ORDER BY m.total_spent DESC;
+
             """,
         "orders": """
                 SELECT 
-                    o.order_id, o.store, o.order_at, m.member_id, m.name AS member_name, 
-                    o.final_amount, p.payment_method AS payment_type, 
-                    i.item_id, i.item_name, oi.item_count
+                    o.order_id,  -- 주문번호
+                    o.order_at,  -- 주문 일시
+                    m.member_id,  -- 회원 ID
+                    m.name AS member_name,  -- 회원 이름
+                    o.store,  -- 매장
+                    i.item_name,  -- 제품명
+                    oi.item_count,  -- 제품 당 개수
+                    i.sale_price,  -- 판매가
+                    i.cost_price,  -- 원가
+                    p.payment_method,  -- 결제 방법
+                    p.used_points,  -- 사용 포인트
+                    o.earned_points,  -- 적립 포인트
+                    # o.total_amount,  -- 주문 총액
+                    oi.item_total,  -- 주문 총액
+                    i.new AS is_new,  -- 신상품 여부
+                    i.best AS is_best  -- 인기상품 여부
+
                 FROM kiosk_orderinfo o
-                LEFT JOIN kiosk_paymentinfo p ON o.order_id = p.order_id
+                JOIN kiosk_orderitem oi ON o.order_id = oi.order_id
+                JOIN menu_item i ON oi.item_id = i.item_id
+                JOIN kiosk_paymentinfo p ON o.order_id = p.order_id
                 LEFT JOIN member_member m ON p.member_id = m.member_id
-                LEFT JOIN kiosk_orderitem oi ON o.order_id = oi.order_id
-                LEFT JOIN menu_item i ON oi.item_id = i.item_id
                 ORDER BY o.order_at DESC;
-            """,
-        "qna": """
-                SELECT 
-                    q.qna_id, q.title AS question_title, q.content AS question_content, 
-                    r.content AS answer, q.created_at AS question_date, r.created_at AS answer_date
-                FROM member_qna q
-                LEFT JOIN member_qnareply r ON q.qna_id = r.qna_id
-                ORDER BY q.created_at DESC
-                LIMIT 10;
             """
+        # "qna": """
+        #         SELECT
+        #             q.qna_id, q.title AS question_title, q.content AS question_content,
+        #             r.content AS answer, q.created_at AS question_date, r.created_at AS answer_date
+        #         FROM member_qna q
+        #         LEFT JOIN member_qnareply r ON q.qna_id = r.qna_id
+        #         ORDER BY q.created_at DESC
+        #         LIMIT 10;
+        #     """
     }
 
     try:
@@ -184,6 +188,10 @@ if __name__ == "__main__":
             df = fetch_data_with_retry(query, engine)
             if not df.empty:
                 upload_to_pinecone(df, namespace)
+
+                # CSV 파일로 저장
+                df.to_csv(f"{namespace}.csv", index=False, encoding="utf-8-sig")
+                print(f"📁 {namespace}.csv 파일 저장 완료!")
             else:
                 print(f"⚠️ {namespace} 데이터를 가져오지 못했습니다.")
     except Exception as e:
