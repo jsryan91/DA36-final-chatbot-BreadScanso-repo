@@ -133,7 +133,7 @@ def run_query(sql_query):
 
 
 
-# SQL 결과에 대한 단순 응답 생성 -> YES/SIMPLE
+# SQL 결과에 대한 단순 응답 생성 -> True/SIMPLE
 def simple_data_response(user_question, query, query_result, history_text=""):
     prompt = f"""당신은 Breadscanso 베이커리의 친절한 매출 분석가입니다.
     이전 대화 기록:
@@ -150,7 +150,7 @@ def simple_data_response(user_question, query, query_result, history_text=""):
     return call_api(prompt)
 
 
-# SQL 결과에 대한 심층 분석 응답 생성 -> YES/ADVANCED
+# SQL 결과에 대한 심층 분석 응답 생성 -> True/ADVANCED
 def advanced_analysis_response(user_question, query, query_result, history_text=""):
     prompt = f"""당신은 Breadscanso 베이커리의 전문 매출 분석가입니다.
     이전 대화 기록:
@@ -171,7 +171,7 @@ def advanced_analysis_response(user_question, query, query_result, history_text=
     return call_api(prompt)
 
 
-# 맥락 기반 대화 응답 생성 (SQL 없이) -> NO
+# 맥락 기반 대화 응답 생성 (SQL 없이) -> False/Simple
 def context_only_response(user_question, history_text=""):
     prompt = f"""당신은 Breadscanso 베이커리의 친절한 매출 분석가입니다. 데이터 분석 전문가로서, 베이커리 운영에 관한 일반적인 지식과 통찰력을 갖고 있습니다.
     이전 대화 기록:
@@ -181,6 +181,7 @@ def context_only_response(user_question, history_text=""):
 
     이것은 구체적인 데이터 조회가 필요 없는 질문입니다. 베이커리 전문가로서의 지식과 경험, 그리고 이전 대화 맥락에 기반하여 친절하고 도움이 되는 응답을 제공해주세요.
     응답은 데이터베이스 조회 없이도 충분히 답변 가능한 내용이어야 합니다.
+    인사 혹은 감사 인사에는 일상 대화처럼 응답해야 합니다.
     """
     return call_api(prompt)
 
