@@ -1,88 +1,26 @@
-from langchain_openai import ChatOpenAI
-from langchain.chat_models import ChatAnthropic
-from langchain_anthropic import ChatAnthropic
-import os
-from dotenv import load_dotenv
+from bread_chatbot.langchain_pipeline.llm_utils import call_api, response_nlp
+from bread_chatbot.langchain_pipeline.query_engine import extract_sql_from_response, generate_query, run_query
 
-# .env 파일로부터 환경 변수 로드
-load_dotenv()
+# 대화 이력을 저장할 전역 변수
+chat_history = []
 
-class LangChainPipeline:
-    def __init__(self):
-        # Claude 모델 초기화 (비즈니스 어드바이저용)
-        self.model_claude = ChatAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-opus-20240229", temperature=0.7)
-        # openai 모델 초기화
-        # self.model_openai = ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY"), model_name="gpt-3.5-turbo", temperature=0.7, max_tokens=2048)
+# 전체 흐름을 자동으로 실행, 대화 맥락 반영
+def ask_chatbot(user_question):
+    global chat_history
+    history_text = "\n".join(chat_history[-5:])  # 최근 5개 대화 유지
 
-    # 🐕🐕🐕🐕🐕
-    def get_business_advice(self, question):
-        from langchain.schema import HumanMessage
+    # SQL 쿼리 생성 (이미 extract_sql_from_response 내장)
+    query = generate_query(user_question, history_text)
+    print(f"생성된 SQL 쿼리: {query}")  # 디버깅용
 
-        # 비즈니스 맥락을 포함한 프롬프트 구성
-        prompt = f"""
-        당신은 베이커리 사업 전문가로, 브레드스캔소라는 베이커리 업체의 매출/판매 데이터를 기반으로 전략적인 조언을 제공합니다.
-        만약 점주가 당신에게 매출이나 제품, 판매 관련해서 질문을 하지 않고 일상적인 대화를 원한다면 이 또한 답변할 수 있습니다.
-        단, '안녕'과 같은 가벼운 안부 인사에는 '안녕하세요 반갑습니다' 정도로 짧게 답해주세요. 매출과 관련되지 않은 일상 대화는 길게 대답할 필요가 없습니다.
+    # 쿼리 실행
+    query_result = run_query(query)
+    print(f"쿼리 결과: {query_result}")  # 디버깅용
 
-        ### 질문:
-        {question}
+    # 결과를 자연어로 변환
+    final_response = response_nlp(user_question, query, query_result, history_text)
 
-        ### 상황:
-        - 브레드스캔소는 베이커리 제품을 생산하는 업체입니다.
-        - 제품군은 빵이 주가 되고, 케이크, 마카롱 등 디저트류도 포함됩니다.
+    # 대화 기록 업데이트
+    chat_history.append(f"Q: {user_question}\nA: {final_response}")
 
-        위 상황을 바탕으로 질문에 전략적이고 실질적인 비즈니스 조언을 제공해주세요.
-        단순히 데이터를 요약하는 것보다 비즈니스 관점에서 인사이트와 실행 가능한 조언을 제공하는 데 중점을 두세요.
-
-        베이커리 산업의 일반적인 트렌드와 모범 사례를 바탕으로 조언해주세요.
-        """
-
-        messages = [HumanMessage(content=prompt)]
-        # claude 응답
-        response = self.model_claude.invoke(messages)
-        # openai 응답
-        # response = self.model_openai.invoke(messages)
-        return response.content
-
-   # 🐕🐕🐕🐕🐕
-   # 벡터-리터리버 연결 후에 살릴 코드
-   #  def create_business_advisor_pipeline(self):
-   #      """매출 데이터 기반 비즈니스 분석 파이프라인"""
-   #      # 데이터 검색용 리트리버 가져오기
-   #      # 🐕 retriever =
-   #      from langchain.schema import HumanMessage
-   #      # 비즈니스 분석용 프롬프트 템플릿
-   #      prompt = ChatPromptTemplate.from_template("""
-   #      당신은 베이커리 사업 전문가로, 브레드스캔소라는 베이커리 업체의 매출/판매 데이터를 기반으로 전략적인 조언을 제공합니다.
-   #
-   #      ### 질문:
-   #      {question}
-   #
-   #      ### 관련 매출/판매 데이터:
-   #      {context}
-   #
-   #      ### 추가 비즈니스 맥락:
-   #      - 브레드스캔소는 프리미엄 베이커리 제품을 생산하는 업체입니다.
-   #      - 제품군에는 빵, 케이크, 쿠키, 페이스트리 등이 포함됩니다.
-   #      - 주요 고객층은 20-40대 직장인과 가족 단위 고객입니다.
-   #      - 현재 계절적 요인과 지역 특성을 고려한 마케팅 전략을 구상 중입니다.
-   #
-   #      위 데이터와 맥락을 바탕으로 질문에 전략적이고 실질적인 비즈니스 조언을 제공해주세요.
-   #      단순히 데이터를 요약하는 것보다 비즈니스 관점에서 인사이트와 실행 가능한 조언을 제공하는 데 중점을 두세요.
-   #
-   #      실제 데이터가 부족한 경우에는 베이커리 산업의 일반적인 트렌드와 모범 사례를 바탕으로 조언해도 좋습니다.
-   #      """)
-   #
-   #      llm = ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY"),
-   #                       model_name="gpt-3.5-turbo",
-   #                       temperature=0.7)
-   #
-   #      # 파이프라인 구성
-   #      business_chain = (
-   #              {"context": retriever, "question": lambda x: x}
-   #              | prompt
-   #              | llm
-   #              | StrOutputParser()
-   #      )
-   #
-   #      return business_chain
+    return final_response

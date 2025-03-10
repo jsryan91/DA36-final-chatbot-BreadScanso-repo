@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from bread_chatbot.app.routers import chatbot
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+import uvicorn
 import os
 
 # 환경변수 로드
@@ -29,7 +30,6 @@ app.include_router(chatbot.router)
 
 # 직접 실행 시에도, 컨테이너에서 실행 시에도 동작하도록 수정
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8003, reload=True)
 else:
     # 컨테이너에서 gunicorn 등으로 실행될 때 사용될 app 객체
