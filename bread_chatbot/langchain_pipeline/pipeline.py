@@ -1,24 +1,36 @@
 from bread_chatbot.langchain_pipeline.llm_utils import call_api, response_nlp
-from bread_chatbot.langchain_pipeline.query_engine import extract_sql_from_response, generate_query, run_query
+from bread_chatbot.langchain_pipeline.query_engine import extract_sql_from_response, generate_query, run_query, analyze_question_type, simple_data_response, advanced_analysis_response, context_only_response
 
 # 대화 이력을 저장할 전역 변수
 chat_history = []
 
-# 전체 흐름을 자동으로 실행, 대화 맥락 반영
+# 전체 흐름을 자동으로 실행, 대화 맥락 반영 (수정된 버전)
 def ask_chatbot(user_question):
     global chat_history
     history_text = "\n".join(chat_history[-5:])  # 최근 5개 대화 유지
 
-    # SQL 쿼리 생성 (이미 extract_sql_from_response 내장)
-    query = generate_query(user_question, history_text)
-    print(f"생성된 SQL 쿼리: {query}")  # 디버깅용
+    # 질문 유형 분류
+    needs_sql, analysis_type = analyze_question_type(user_question, history_text)
+    print(f"SQL 쿼리 필요 여부: {needs_sql}, 분석 유형: {analysis_type}")  # 디버깅용
 
-    # 쿼리 실행
-    query_result = run_query(query)
-    print(f"쿼리 결과: {query_result}")  # 디버깅용
+    if needs_sql:
+        # SQL 쿼리 생성
+        query = generate_query(user_question, history_text)
+        print(f"생성된 SQL 쿼리: {query}")  # 디버깅용
 
-    # 결과를 자연어로 변환
-    final_response = response_nlp(user_question, query, query_result, history_text)
+        # 쿼리 실행
+        query_result = run_query(query)
+        print(f"쿼리 결과: {query_result}")  # 디버깅용
+
+        # 분석 유형에 따른 응답 생성
+        if analysis_type == "SIMPLE":
+            final_response = simple_data_response(user_question, query, query_result, history_text)
+        else:  # ADVANCED
+            final_response = advanced_analysis_response(user_question, query, query_result, history_text)
+    else:
+        # 맥락 기반 응답 생성
+        final_response = context_only_response(user_question, history_text)
+        query = "SQL 쿼리 없이 맥락 기반 응답"  # 로그용
 
     # 대화 기록 업데이트
     chat_history.append(f"Q: {user_question}\nA: {final_response}")
