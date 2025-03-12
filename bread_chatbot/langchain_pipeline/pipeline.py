@@ -1,13 +1,18 @@
 from bread_chatbot.langchain_pipeline.llm_utils import call_api, response_nlp
 from bread_chatbot.langchain_pipeline.query_engine import extract_sql_from_response, generate_query, run_query, analyze_question_type, simple_data_response, advanced_analysis_response, context_only_response
+from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.messages import HumanMessage, AIMessage
 
 # 대화 이력을 저장할 전역 변수
-chat_history = []
+message_history = ChatMessageHistory()
 
 # 전체 흐름을 자동으로 실행, 대화 맥락 반영 (수정된 버전)
 def ask_chatbot(user_question):
-    global chat_history
-    history_text = "\n".join(chat_history[-5:])  # 최근 5개 대화 유지
+    recent_messages = message_history.messages[-10:] if message_history.messages else []
+    history_text = "\n".join([
+        f"Question: {msg.content}" if isinstance(msg, HumanMessage) else f"Answer: {msg.content}"
+        for msg in recent_messages
+    ])  # 최근 5개 대화 유지
 
     # 질문 유형 분류
     needs_sql, analysis_type = analyze_question_type(user_question, history_text)
@@ -33,6 +38,8 @@ def ask_chatbot(user_question):
         query = "SQL 쿼리 없이 맥락 기반 응답"  # 로그용
 
     # 대화 기록 업데이트
-    chat_history.append(f"Q: {user_question}\nA: {final_response}")
+    # chat_history.append(f"Q: {user_question}\nA: {final_response}")
+    message_history.add_user_message(user_question)
+    message_history.add_ai_message(final_response)
 
     return final_response
