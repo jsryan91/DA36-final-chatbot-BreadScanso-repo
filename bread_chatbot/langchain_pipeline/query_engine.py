@@ -2,7 +2,8 @@ import os
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 from bread_chatbot.langchain_pipeline.table_schema import TABLE_SCHEMA
-from bread_chatbot.langchain_pipeline.llm_utils import call_api
+from bread_chatbot.langchain_pipeline.llm_utils import create_chain
+from langchain_community.utilities import SQLDatabase
 
 # 환경 변수 로드
 load_dotenv()
@@ -14,6 +15,7 @@ db_name = os.getenv("DB_NAME")
 # DB 연결 설정 (이제 query_engine.py에서도 engine을 사용할 수 있음)
 DB_URL = f"mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}"
 engine = create_engine(DB_URL)
+db = SQLDatabase.from_uri(DB_URL)
 
 # SQL 응답에서 실행 가능한 쿼리만 추출하는 함수 (자꾸 쿼리 외의 텍스트까지 인식해서 오류 발생 -> 텍스트 제외)
 def extract_sql_from_response(response):
@@ -35,7 +37,7 @@ def extract_sql_from_response(response):
 
 # 사용자 입력을 기반으로 SQL 쿼리를 생성
 def generate_query(user_question, history_text=""):
-    prompt = f"""사용자가 다음과 같은 질문을 합니다: '{user_question}'
+    system_prompt = f"""사용자가 다음과 같은 질문을 합니다: '{user_question}'
     이전 대화 기록:
     {history_text}
     아래는 MySQL 데이터베이스의 테이블 스키마입니다:
@@ -48,17 +50,15 @@ def generate_query(user_question, history_text=""):
     - 예시로, 테이블 간의 JOIN을 올바르게 사용해야 하며, 집계 함수는 필요한 경우에만 사용해야 한다는 점을 명심할 것.
     - 오직 SQL 쿼리만 반환하고 설명이나 코드 블록 표시(```) 또는 기타 텍스트는 포함하지 말 것.
     """
-    response = call_api(prompt)
+    sql_chain = create_chain(system_prompt)
+    response = sql_chain.invoke({"input": user_question})
     return extract_sql_from_response(response)
 
 # 질문 분석 및 응답 유형 분류 함수
 def analyze_question_type(user_question, history_text=""):
-    prompt = f"""당신은 베이커리 매출 분석 전문가입니다. 
+    system_prompt = f"""당신은 베이커리 매출 분석 전문가입니다. 
     아래 테이블 스키마를 가진 데이터베이스를 활용해야 합니다:
     {TABLE_SCHEMA}
-    이전 대화 기록:
-    {history_text}
-    사용자 질문: '{user_question}'
 
     위 질문에 대해 판단해주세요:
     1. 이 질문은 데이터베이스 조회가 필요한 질문인가요? (YES/NO)
@@ -70,7 +70,13 @@ def analyze_question_type(user_question, history_text=""):
     - NEEDS_SQL: YES 또는 NO
     - ANALYSIS_TYPE: SIMPLE 또는 ADVANCED (NEEDS_SQL이 YES인 경우만)
     """
-    response = call_api(prompt)
+    analyzer_chain = create_chain(system_prompt)
+
+    input_with_history = f"""이전 대화 기록:
+    {history_text}
+    사용자 질문 : '{user_question}'"""
+
+    response = analyzer_chain.invoke({"input": input_with_history})
 
     # 응답에서 필요한 정보 추출
     needs_sql = "NEEDS_SQL: YES" in response.upper()
@@ -83,7 +89,7 @@ def analyze_question_type(user_question, history_text=""):
 
 # SQL 결과에 대한 단순 응답 생성 -> True/SIMPLE
 def simple_data_response(user_question, query, query_result, history_text=""):
-    prompt = f"""당신은 Breadscanso 베이커리의 친절한 매출 분석가입니다.
+    system_prompt = f"""당신은 Breadscanso 베이커리의 친절한 매출 분석가입니다.
     이전 대화 기록:
     {history_text}
     사용자의 질문:
@@ -95,11 +101,12 @@ def simple_data_response(user_question, query, query_result, history_text=""):
     - 매장 A는 서초점, 매장 B는 강남점으로 표현할 것.
     - 사용자 친화적으로 대답할 것.
     """
-    return call_api(prompt)
+    simple_chain = create_chain(system_prompt)
+    return simple_chain.invoke({"input": ""})
 
 # SQL 결과에 대한 심층 분석 응답 생성 -> True/ADVANCED
 def advanced_analysis_response(user_question, query, query_result, history_text=""):
-    prompt = f"""당신은 Breadscanso 베이커리의 전문 매출 분석가입니다.
+    system_prompt = f"""당신은 Breadscanso 베이커리의 전문 매출 분석가입니다.
     이전 대화 기록:
     {history_text}
     사용자의 질문:
@@ -116,7 +123,8 @@ def advanced_analysis_response(user_question, query, query_result, history_text=
     - 전문적이고 통찰력 있는 응답을 제공할 것.
     - 핵심만 포함해서 400자 이내로 작성할 것.
     """
-    return call_api(prompt)
+    advanced_chain = create_chain(system_prompt)
+    return advanced_chain.invoke({"input": ""})
 
 
 # SQL 쿼리 실행 후 결과를 반환
@@ -131,7 +139,7 @@ def run_query(sql_query):
 
 # 맥락 기반 대화 응답 생성 (SQL 없이) -> False/Simple
 def context_only_response(user_question, history_text=""):
-    prompt = f"""당신은 Breadscanso 베이커리의 친절한 매출 분석가입니다. 데이터 분석 전문가로서, 베이커리 운영에 관한 일반적인 지식과 통찰력을 갖고 있습니다.
+    system_prompt = f"""당신은 Breadscanso 베이커리의 친절한 매출 분석가입니다. 데이터 분석 전문가로서, 베이커리 운영에 관한 일반적인 지식과 통찰력을 갖고 있습니다.
     이전 대화 기록:
     {history_text}
     사용자의 질문:
@@ -141,5 +149,6 @@ def context_only_response(user_question, history_text=""):
     응답은 데이터베이스 조회 없이도 충분히 답변 가능한 내용이어야 합니다.
     인사 혹은 감사 인사에는 일상 대화처럼 응답해야 합니다.
     """
-    return call_api(prompt)
+    context_chain = create_chain(system_prompt)
+    return context_chain.invoke({"input": user_question})
 

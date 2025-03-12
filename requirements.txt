@@ -14,3 +14,6 @@ langchain
 langchain-anthropic
 langchain-community
 pinecone~=6.0.1
+langchain_core
+langchain_experimental
+sqlalchemy
