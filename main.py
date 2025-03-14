@@ -26,7 +26,7 @@ app.add_middleware(
 )
 
 # 라우터 등록 (엔드포인트 등록)
-app.include_router(chatbot.router, prefix='/api', tags=['chatbot'])
+app.include_router(chatbot.router, tags=['chatbot'])
 
 # 직접 실행 시에도, 컨테이너에서 실행 시에도 동작하도록 수정
 if __name__ == "__main__":
