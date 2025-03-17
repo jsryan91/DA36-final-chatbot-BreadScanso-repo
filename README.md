@@ -1,1 +1,1 @@
-# DA36-final-chatbot-BreadScanso-repo
+## DA36기 최종프로젝트 AI(chatbot) repo
