@@ -26,10 +26,10 @@
 
 ## 📸 데모
 1️⃣ **대화 맥락 기반**  
-![hi](https://github.com/user-attachments/assets/fe96e541-83cf-4632-97e4-2b02f0500af2)
+![hi](https://github.com/user-attachments/assets/f37f409f-bbb7-4e2e-803b-7d2a25e5eb12)
 
 2️⃣ **단순 조회/집계**  
-![sales](https://github.com/user-attachments/assets/d808fd2e-eb5f-479a-b8e9-8094ea1bc6e9)
+![sales](https://github.com/user-attachments/assets/4406d86c-95e1-47c2-9996-77d30afbc8a2)
 
 3️⃣ **심층 분석**  
 ![item](https://github.com/user-attachments/assets/d6e89b8f-fa33-4a2c-bfd2-e191c2eb319b)
