@@ -2,9 +2,9 @@
 ## [RAG 기반 LLM] 베이커리 매출 분석 시스템
 
 ### 📂 관련 레포지토리
-- **WEB repo** | [GitHub 링크](https://github.com/pladata-encore/DA36-final-web-BreadScanso-repo)
-- **AI repo - 이미지 인식** | [GitHub 링크](https://github.com/pladata-encore/DA36-final-ai-BreadScanso-repo)
-- **AI repo - chatbot** | [GitHub 링크](https://github.com/pladata-encore/DA36-final-chatbot-BreadScanso-repo)
+- **WEB repo** | https://github.com/pladata-encore/DA36-final-web-BreadScanso-repo
+- **AI repo - 이미지 인식** | https://github.com/pladata-encore/DA36-final-ai-BreadScanso-repo
+- **AI repo - chatbot** | https://github.com/pladata-encore/DA36-final-chatbot-BreadScanso-repo
 
 ---
 
@@ -56,11 +56,11 @@
 - OpenAI API를 활용한 자연어-쿼리 변환 가능성 탐색  
 - SQLAlchemy를 이용한 효율적인 데이터베이스 연동  
 
-### ⚠️ 문제점 및 해결 방법
+### 🤓 문제점 및 해결 방법
 - **단순한 인사에도 SQL 쿼리를 생성하여 부적절한 답변 제공**  
   → **SQL 쿼리가 필요한 질문인지 분류하는 단계 추가**  
 
-### 🚀 추가 개선 가능성
+### 🤷🏻‍♂️ 추가 개선 가능성
 - **모델 변경 및 튜닝**  
   - SQL Query 생성 특화 모델 **DB-GPT** 사용  
   - 다양한 **LLM API 테스트**  
