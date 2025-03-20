@@ -28,8 +28,10 @@
 1️⃣ **대화 맥락 기반**  
 ![hi](https://github.com/user-attachments/assets/f37f409f-bbb7-4e2e-803b-7d2a25e5eb12)
 
+
 2️⃣ **단순 조회/집계**  
 ![sales](https://github.com/user-attachments/assets/4406d86c-95e1-47c2-9996-77d30afbc8a2)
+
 
 3️⃣ **심층 분석**  
 ![event](https://github.com/user-attachments/assets/85b4043b-f9df-42ee-8686-491dbb6ac99f)
