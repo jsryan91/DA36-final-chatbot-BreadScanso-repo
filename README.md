@@ -32,7 +32,7 @@
 ![sales](https://github.com/user-attachments/assets/4406d86c-95e1-47c2-9996-77d30afbc8a2)
 
 3️⃣ **심층 분석**  
-![item](https://github.com/user-attachments/assets/d6e89b8f-fa33-4a2c-bfd2-e191c2eb319b)
+![event](https://github.com/user-attachments/assets/85b4043b-f9df-42ee-8686-491dbb6ac99f)
 
 ---
 
