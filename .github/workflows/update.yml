@@ -1,38 +1,38 @@
-name: Update Pinecone Data
+# name: Update Pinecone Data
 
-on:
-  schedule:
-    - cron: '0 11 * * *'  # ⏰ 한국 시간 20:00에 실행
-  workflow_dispatch:  # 🚀 수동 실행도 가능
+# on:
+#   schedule:
+#     - cron: '0 11 * * *'  # ⏰ 한국 시간 20:00에 실행
+#   workflow_dispatch:  # 🚀 수동 실행도 가능
 
-jobs:
-  update-pinecone:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+# jobs:
+#   update-pinecone:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
+#       - name: Set up Python
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: '3.12'
           
-      - name: Cache Python dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+#       - name: Cache Python dependencies
+#         uses: actions/cache@v3
+#         with:
+#           path: ~/.cache/pip
+#           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+#           restore-keys: |
+#             ${{ runner.os }}-pip-
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt 
+#       - name: Install dependencies
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install -r requirements.txt 
 
-      - name: Run update script
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
-          PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
-        run: python upload_to_pinecone.py
+#       - name: Run update script
+#         env:
+#           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+#           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+#           PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
+#         run: python upload_to_pinecone.py
